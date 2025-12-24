@@ -8,7 +8,7 @@
 
 A free, open-source web application that allows you to upload CSV or Excel files and create stunning, interactive data visualizations with just a few clicks. Built with modern web technologies for a seamless user experience.
 
-![Data Viz Charts Preview](https://data-viz-charts.netlify.app/github-preview.png)
+![Data Viz Charts Preview](static/home.png)
 
 ## 🚀 Try It Now
 
@@ -120,14 +120,22 @@ Your feedback helps make Data Viz Charts better for everyone!
 ### Hero Section
 Beautiful landing page with gradient background and feature highlights.
 
+![Hero Section](static/home.png)
+
 ### Interactive Data Table
 Search, sort, and paginate through your uploaded data effortlessly.
+
+![File Upload & Data](static/file-upload.png)
 
 ### Chart Configuration
 Intuitive interface for selecting chart types and configuring visualization parameters.
 
+![Chart Selection](static/chart-selection.png)
+
 ### Beautiful Visualizations
 Stunning, interactive charts with export functionality and smooth animations.
+
+![Chart Display](static/chart-display.png)
 
 ## 🙏 Acknowledgments
 
