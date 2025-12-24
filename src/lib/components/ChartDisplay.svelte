@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 
 	export let config: {
@@ -14,6 +14,11 @@
 
 	let chartElement: HTMLElement;
 	let chart: any;
+	let lastConfigKey = '';
+	let lastSeriesKey = '';
+	let insights: { title: string; detail: string }[] = [];
+	let narrative: string[] = [];
+	let dataNotes: string[] = [];
 
 	$: if (chart && config && data) {
 		updateChart();
@@ -35,10 +40,199 @@
 		}
 	});
 
+	onDestroy(() => {
+		if (chart) {
+			chart.destroy();
+			chart = null;
+		}
+	});
+
+	function getConfigKey() {
+		return JSON.stringify({
+			chartType: config.chartType,
+			xAxis: config.xAxis,
+			yAxis: config.yAxis,
+			yAxes: config.yAxes || [],
+			stacked: !!config.stacked,
+			annotations: config.annotations || []
+		});
+	}
+
+	function toNumber(value: any) {
+		const num = Number(value);
+		return Number.isFinite(num) ? num : null;
+	}
+
+	function formatNumber(value: number) {
+		return typeof value === 'number' ? value.toLocaleString() : String(value);
+	}
+
+	function analyzeData() {
+		const rows = Array.isArray(data) ? data : [];
+		const activeYAxes = config.yAxes && config.yAxes.length > 0 ? config.yAxes : [config.yAxis];
+
+		if (!rows.length || !activeYAxes[0]) {
+			insights = [];
+			narrative = [];
+			dataNotes = [];
+			return;
+		}
+
+		const primaryAxis = activeYAxes[0];
+		const values = rows
+			.map((row) => toNumber(row[primaryAxis]))
+			.filter((val) => val !== null) as number[];
+
+		if (values.length === 0) {
+			insights = [];
+			narrative = [];
+			dataNotes = [];
+			return;
+		}
+
+		const total = values.reduce((sum, val) => sum + val, 0);
+		const mean = total / values.length;
+		const min = Math.min(...values);
+		const max = Math.max(...values);
+
+		const variance =
+			values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+		const stdDev = Math.sqrt(variance);
+
+		const maxIndex = values.findIndex((val) => val === max);
+		const minIndex = values.findIndex((val) => val === min);
+		const maxLabel = rows[maxIndex]?.[config.xAxis];
+		const minLabel = rows[minIndex]?.[config.xAxis];
+
+		let trendLabel = 'Stable trend';
+		if (values.length >= 3) {
+			const n = values.length;
+			const xMean = (n - 1) / 2;
+			const yMean = mean;
+			let num = 0;
+			let den = 0;
+			for (let i = 0; i < n; i += 1) {
+				const x = i - xMean;
+				num += x * (values[i] - yMean);
+				den += x * x;
+			}
+			const slope = den === 0 ? 0 : num / den;
+			const normalized = Math.abs(mean) < 1e-6 ? slope : slope / Math.abs(mean);
+			if (normalized > 0.02) trendLabel = 'Upward trend';
+			if (normalized < -0.02) trendLabel = 'Downward trend';
+		}
+
+		const outliers =
+			stdDev === 0
+				? 0
+				: values.filter((val) => Math.abs((val - mean) / stdDev) > 2.5).length;
+
+		const missingCount = rows.length - values.length;
+		const uniqueX = new Set(rows.map((row) => row[config.xAxis])).size;
+
+		insights = [
+			{
+				title: 'Peak',
+				detail: `${formatNumber(max)} at ${maxLabel ?? 'N/A'}`
+			},
+			{
+				title: 'Low',
+				detail: `${formatNumber(min)} at ${minLabel ?? 'N/A'}`
+			},
+			{
+				title: 'Trend',
+				detail: `${trendLabel} across ${values.length} points`
+			}
+		];
+
+		if (outliers > 0) {
+			insights.push({
+				title: 'Outliers',
+				detail: `${outliers} values stand out from the average`
+			});
+		}
+
+		narrative = [
+			`${primaryAxis} averages ${formatNumber(mean)} across ${values.length} records.`,
+			`The highest point is ${formatNumber(max)} at ${maxLabel ?? 'N/A'}.`,
+			trendLabel !== 'Stable trend'
+				? `Overall, the series shows an ${trendLabel.toLowerCase()}.`
+				: `Overall, the series remains relatively stable.`
+		];
+
+		dataNotes = [];
+		if (missingCount > 0) {
+			dataNotes.push(`Missing ${primaryAxis} values: ${missingCount}`);
+		}
+		dataNotes.push(`Distinct ${config.xAxis} entries: ${uniqueX}`);
+	}
+
+	function shouldShowDataLabels(chartType: string, rowCount: number) {
+		if (['pie', 'donut', 'radialBar', 'polarArea'].includes(chartType)) return true;
+		if (chartType === 'bar') return rowCount <= 12;
+		return rowCount <= 8;
+	}
+
+	function buildSeries(
+		chartType: string,
+		activeYAxes: string[],
+		categories: (string | number)[],
+		rows: any[]
+	) {
+		if (['pie', 'donut', 'radialBar', 'polarArea'].includes(chartType)) {
+			return rows.map((row) => parseFloat(row[activeYAxes[0]]) || 0);
+		}
+
+		if (chartType === 'scatter') {
+			return activeYAxes.map((axis) => ({
+				name: axis,
+				data: rows.map((row) => ({
+					x: row[config.xAxis],
+					y: parseFloat(row[axis]) || 0
+				}))
+			}));
+		}
+
+		if (chartType === 'heatmap') {
+			return activeYAxes.map((axis) => ({
+				name: axis,
+				data: rows.map((row, index) => ({
+					x: categories[index],
+					y: parseFloat(row[axis]) || 0
+				}))
+			}));
+		}
+
+		return activeYAxes.map((axis) => ({
+			name: axis,
+			data: rows.map((row) => parseFloat(row[axis]) || 0)
+		}));
+	}
+
 	function getOptions() {
-		const categories = data.map((row) => row[config.xAxis]);
+		const rows = Array.isArray(data) ? data : [];
+		const categories = rows.map((row) => row[config.xAxis]);
 		// Determine which axes to use (support multiple or single legacy)
 		const activeYAxes = config.yAxes && config.yAxes.length > 0 ? config.yAxes : [config.yAxis];
+		const yAxisOptions = activeYAxes.map((axis) => ({
+			title: {
+				text: axis,
+				style: {
+					color: '#6B7280',
+					fontSize: '12px',
+					fontWeight: 600
+				}
+			},
+			labels: {
+				style: {
+					colors: '#6B7280',
+					fontSize: '12px'
+				},
+				formatter: (val: number) => {
+					return typeof val === 'number' ? val.toLocaleString() : val;
+				}
+			}
+		}));
 
 		const options: any = {
 			series: [],
@@ -75,7 +269,7 @@
 				'#546E7A'
 			],
 			dataLabels: {
-				enabled: true,
+				enabled: shouldShowDataLabels(config.chartType, rows.length),
 				style: {
 					fontSize: '12px',
 					fontWeight: '600',
@@ -107,17 +301,7 @@
 					}
 				}
 			},
-			yaxis: {
-				labels: {
-					style: {
-						colors: '#6B7280',
-						fontSize: '12px'
-					},
-					formatter: (val: number) => {
-						return typeof val === 'number' ? val.toLocaleString() : val;
-					}
-				}
-			},
+			yaxis: yAxisOptions,
 			grid: {
 				borderColor: '#E5E7EB',
 				strokeDashArray: 4
@@ -156,8 +340,7 @@
 		// Types that require single series of values (Pie/Donut/Radial/Polar)
 		// We'll use the first Y-Axis for these
 		if (['pie', 'donut', 'radialBar', 'polarArea'].includes(config.chartType)) {
-			const seriesData = data.map((row) => parseFloat(row[activeYAxes[0]]) || 0);
-			options.series = seriesData;
+			options.series = buildSeries(config.chartType, activeYAxes, categories, rows);
 			options.labels = categories;
 			// Chart type might need to be explicitly set if different from generic 'pie'
 			// However, config.chartType is passed to chart.type above.
@@ -180,10 +363,7 @@
 			};
 		} else {
 			// Multi-series types (Bar, Line, Area, Radar, Scatter, Heatmap)
-			options.series = activeYAxes.map((axis) => ({
-				name: axis,
-				data: data.map((row) => parseFloat(row[axis]) || 0)
-			}));
+			options.series = buildSeries(config.chartType, activeYAxes, categories, rows);
 
 			// Show actual values
 			options.dataLabels.formatter = function (val: number) {
@@ -199,8 +379,25 @@
 
 	function updateChart() {
 		if (chart) {
-			chart.updateOptions(getOptions());
+			const options = getOptions();
+			const configKey = getConfigKey();
+			const seriesKey = JSON.stringify(options.series);
+			const isConfigChange = configKey !== lastConfigKey;
+			const isSeriesChange = seriesKey !== lastSeriesKey;
+
+			if (isConfigChange) {
+				chart.updateOptions(options);
+			} else if (isSeriesChange) {
+				chart.updateSeries(options.series);
+			}
+
+			lastConfigKey = configKey;
+			lastSeriesKey = seriesKey;
 		}
+	}
+
+	$: if (config && data) {
+		analyzeData();
 	}
 
 	async function exportToPDF() {
@@ -289,6 +486,44 @@
 		</div>
 	</div>
 	<div bind:this={chartElement}></div>
+
+	{#if insights.length > 0}
+		<div class="insight-panel">
+			<div class="insight-header">
+				<h4 class="insight-title">Insight Callouts</h4>
+				<span class="insight-subtitle">Auto-generated from your data</span>
+			</div>
+			<div class="insight-grid">
+				{#each insights as insight}
+					<div class="insight-card">
+						<div class="insight-card-title">{insight.title}</div>
+						<div class="insight-card-detail">{insight.detail}</div>
+					</div>
+				{/each}
+			</div>
+			{#if dataNotes.length > 0}
+				<div class="insight-notes">
+					{#each dataNotes as note}
+						<span class="insight-note">{note}</span>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	{/if}
+
+	{#if narrative.length > 0}
+		<div class="story-panel">
+			<div class="story-header">
+				<h4 class="story-title">Story Mode</h4>
+				<span class="story-subtitle">A short narrative you can use in reports</span>
+			</div>
+			<ol class="story-list">
+				{#each narrative as line}
+					<li>{line}</li>
+				{/each}
+			</ol>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -363,5 +598,115 @@
 			width: 100%;
 			justify-content: flex-start;
 		}
+	}
+
+	.insight-panel {
+		margin-top: 1.5rem;
+		padding: 1rem;
+		border-radius: 0.75rem;
+		background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+		border: 1px solid #e2e8f0;
+	}
+
+	.insight-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1rem;
+		margin-bottom: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.insight-title {
+		font-size: 1rem;
+		font-weight: 700;
+		color: #1e293b;
+		margin: 0;
+	}
+
+	.insight-subtitle {
+		font-size: 0.8125rem;
+		color: #64748b;
+	}
+
+	.insight-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 0.75rem;
+	}
+
+	.insight-card {
+		background-color: white;
+		border-radius: 0.5rem;
+		padding: 0.75rem;
+		border: 1px solid #e2e8f0;
+		box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+	}
+
+	.insight-card-title {
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: #64748b;
+		font-weight: 700;
+	}
+
+	.insight-card-detail {
+		margin-top: 0.35rem;
+		font-size: 0.9rem;
+		color: #0f172a;
+		font-weight: 600;
+	}
+
+	.insight-notes {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.75rem;
+	}
+
+	.insight-note {
+		background-color: #e0e7ff;
+		color: #3730a3;
+		padding: 0.35rem 0.6rem;
+		border-radius: 999px;
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
+	.story-panel {
+		margin-top: 1rem;
+		padding: 1rem;
+		border-radius: 0.75rem;
+		background: linear-gradient(120deg, #fff7ed 0%, #ffedd5 100%);
+		border: 1px solid #fed7aa;
+	}
+
+	.story-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1rem;
+		margin-bottom: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	.story-title {
+		font-size: 1rem;
+		font-weight: 700;
+		color: #7c2d12;
+		margin: 0;
+	}
+
+	.story-subtitle {
+		font-size: 0.8125rem;
+		color: #9a3412;
+	}
+
+	.story-list {
+		margin: 0;
+		padding-left: 1.25rem;
+		color: #7c2d12;
+		font-size: 0.9rem;
 	}
 </style>

@@ -1,4 +1,3 @@
-# data-viz-charts
 # 📊 Data Viz Charts
 
 > Transform your data into beautiful, interactive charts instantly - No coding required!
@@ -108,6 +107,12 @@ Your feedback helps make Data Viz Charts better for everyone!
 - [ ] Batch chart generation
 - [ ] Custom color schemes
 
+### Under Consideration
+- [ ] Real-time data updates
+- [ ] API integration for data sources
+- [ ] Collaborative features
+- [ ] Mobile app version
+
 *Vote on features or suggest new ones by opening an issue!*
 
 ## � Screenshots
@@ -138,6 +143,10 @@ Stunning, interactive charts with export functionality and smooth animations.
 - GitHub: [@shashi089](https://github.com/shashi089)
 - Live App: [https://data-viz-charts.netlify.app/](https://data-viz-charts.netlify.app/)
 
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ## 💬 Support
 
 If you find this project helpful, please:
@@ -151,6 +160,6 @@ If you find this project helpful, please:
 <p align="center">Made with ❤️ by Shashidhar</p>
 <p align="center">
   <a href="https://data-viz-charts.netlify.app/">Try Live Demo</a> •
-  <a href="https://github.com/shashi089/data-viz-charts/issues">Report Bug</a> •
-  <a href="https://github.com/shashi089/data-viz-charts/issues">Request Feature</a>
+  <a href="https://github.com/shashi089/data-view/issues">Report Bug</a> •
+  <a href="https://github.com/shashi089/data-view/issues">Request Feature</a>
 </p>
