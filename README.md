@@ -1,4 +1,3 @@
-# data-viz-charts
 # 📊 Data Viz Charts
 
 > Transform your data into beautiful, interactive charts instantly - No coding required!
@@ -9,7 +8,7 @@
 
 A free, open-source web application that allows you to upload CSV or Excel files and create stunning, interactive data visualizations with just a few clicks. Built with modern web technologies for a seamless user experience.
 
-![Data Viz Charts Preview](https://data-viz-charts.netlify.app/github-preview.png)
+![Data Viz Charts Preview](static/home.png)
 
 ## 🚀 Try It Now
 
@@ -108,6 +107,12 @@ Your feedback helps make Data Viz Charts better for everyone!
 - [ ] Batch chart generation
 - [ ] Custom color schemes
 
+### Under Consideration
+- [ ] Real-time data updates
+- [ ] API integration for data sources
+- [ ] Collaborative features
+- [ ] Mobile app version
+
 *Vote on features or suggest new ones by opening an issue!*
 
 ## � Screenshots
@@ -115,14 +120,22 @@ Your feedback helps make Data Viz Charts better for everyone!
 ### Hero Section
 Beautiful landing page with gradient background and feature highlights.
 
+![Hero Section](static/home.png)
+
 ### Interactive Data Table
 Search, sort, and paginate through your uploaded data effortlessly.
+
+![File Upload & Data](static/file-upload.png)
 
 ### Chart Configuration
 Intuitive interface for selecting chart types and configuring visualization parameters.
 
+![Chart Selection](static/chart-selection.png)
+
 ### Beautiful Visualizations
 Stunning, interactive charts with export functionality and smooth animations.
+
+![Chart Display](static/chart-display.png)
 
 ## 🙏 Acknowledgments
 
@@ -138,6 +151,10 @@ Stunning, interactive charts with export functionality and smooth animations.
 - GitHub: [@shashi089](https://github.com/shashi089)
 - Live App: [https://data-viz-charts.netlify.app/](https://data-viz-charts.netlify.app/)
 
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ## 💬 Support
 
 If you find this project helpful, please:
@@ -151,6 +168,6 @@ If you find this project helpful, please:
 <p align="center">Made with ❤️ by Shashidhar</p>
 <p align="center">
   <a href="https://data-viz-charts.netlify.app/">Try Live Demo</a> •
-  <a href="https://github.com/shashi089/data-viz-charts/issues">Report Bug</a> •
-  <a href="https://github.com/shashi089/data-viz-charts/issues">Request Feature</a>
+  <a href="https://github.com/shashi089/data-view/issues">Report Bug</a> •
+  <a href="https://github.com/shashi089/data-view/issues">Request Feature</a>
 </p>
