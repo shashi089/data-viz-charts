@@ -432,7 +432,29 @@
 
 		<!-- Annotations Section -->
 		<div class="annotations-section">
-			<h3 class="subsection-title">Threshold Lines</h3>
+			<div class="subsection-header">
+				<h3 class="subsection-title">Threshold Lines</h3>
+				<div class="tooltip-wrapper">
+					<svg class="info-icon-tooltip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					<div class="tooltip-content">
+						<strong>When to use Threshold Lines:</strong>
+						<ul>
+							<li>Mark targets or goals (e.g., "Sales Target: 10000")</li>
+							<li>Show acceptable ranges (e.g., "Max Capacity: 100")</li>
+							<li>Highlight critical values (e.g., "Warning Level: 75")</li>
+							<li>Compare against benchmarks or averages</li>
+						</ul>
+						<em>Best for: Line, Area, Bar, and Column charts</em>
+					</div>
+				</div>
+			</div>
 			<div class="annotation-form">
 				<input
 					type="number"
@@ -468,20 +490,43 @@
 
 		<!-- Filter Section -->
 		<div class="filter-section">
-			<button class="filter-toggle-btn" on:click={toggleFilters}>
-				<svg class="filter-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-					/>
-				</svg>
-				{showFilters ? 'Hide Filters' : 'Add Filters'}
-				{#if filters.length > 0}
-					<span class="filter-badge">{filters.length}</span>
-				{/if}
-			</button>
+			<div class="filter-header">
+				<button class="filter-toggle-btn" on:click={toggleFilters}>
+					<svg class="filter-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+						/>
+					</svg>
+					{showFilters ? 'Hide Filters' : 'Add Filters'}
+					{#if filters.length > 0}
+						<span class="filter-badge">{filters.length}</span>
+					{/if}
+				</button>
+				<div class="tooltip-wrapper">
+					<svg class="info-icon-tooltip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					<div class="tooltip-content">
+						<strong>When to use Filters:</strong>
+						<ul>
+							<li>Focus on specific categories or regions</li>
+							<li>Exclude outliers or irrelevant data</li>
+							<li>Analyze data within a specific range</li>
+							<li>Compare subsets of your dataset</li>
+							<li>Clean up visualization by removing noise</li>
+						</ul>
+						<em>Example: Show only sales > 1000 or products containing "Pro"</em>
+					</div>
+				</div>
+			</div>
 
 			{#if showFilters}
 				<div class="filters-container">
@@ -1028,8 +1073,111 @@
 		font-size: 1rem;
 		font-weight: 600;
 		color: #374151;
-		margin-bottom: 0.75rem;
+		margin-bottom: 0;
 		font-family: 'Outfit', sans-serif;
+	}
+
+	.subsection-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 0.75rem;
+		gap: 0.5rem;
+	}
+
+	/* Tooltip Styles */
+	.tooltip-wrapper {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.info-icon-tooltip {
+		width: 20px;
+		height: 20px;
+		color: #6b7280;
+		cursor: help;
+		transition: all 0.2s ease;
+	}
+
+	.info-icon-tooltip:hover {
+		color: #667eea;
+		transform: scale(1.1);
+	}
+
+	.tooltip-content {
+		position: absolute;
+		bottom: calc(100% + 12px);
+		left: 50%;
+		transform: translateX(-50%) translateY(8px);
+		background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+		color: white;
+		padding: 1.25rem;
+		border-radius: 0.875rem;
+		box-shadow:
+			0 20px 40px rgba(0, 0, 0, 0.4),
+			0 0 0 1px rgba(255, 255, 255, 0.1);
+		width: 300px;
+		max-width: 90vw;
+		font-size: 0.8125rem;
+		line-height: 1.6;
+		opacity: 0;
+		visibility: hidden;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		z-index: 1000;
+		pointer-events: none;
+		backdrop-filter: blur(10px);
+	}
+
+	.tooltip-content::after {
+		content: '';
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 8px solid transparent;
+		border-top-color: #111827;
+		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+	}
+
+	.tooltip-wrapper:hover .tooltip-content {
+		opacity: 1;
+		visibility: visible;
+		transform: translateX(-50%) translateY(0);
+	}
+
+	.tooltip-content strong {
+		display: block;
+		color: #fbbf24;
+		margin-bottom: 0.5rem;
+		font-size: 0.875rem;
+		font-weight: 700;
+		font-family: 'Outfit', sans-serif;
+	}
+
+	.tooltip-content ul {
+		margin: 0.5rem 0;
+		padding-left: 1.25rem;
+		list-style-type: disc;
+	}
+
+	.tooltip-content li {
+		margin-bottom: 0.375rem;
+		color: #e5e7eb;
+	}
+
+	.tooltip-content li:last-child {
+		margin-bottom: 0;
+	}
+
+	.tooltip-content em {
+		display: block;
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		color: #a5b4fc;
+		font-size: 0.75rem;
+		font-style: italic;
 	}
 
 	.annotation-form {
@@ -1053,6 +1201,13 @@
 		margin-top: 1.5rem;
 		padding-top: 1.5rem;
 		border-top: 1px solid #e5e7eb;
+	}
+
+	.filter-header {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 0;
 	}
 
 	.filter-toggle-btn {
@@ -1277,6 +1432,17 @@
 
 		.recommendation-apply-btn {
 			width: 100%;
+		}
+
+		/* Tooltips are already responsive with max-width: 90vw */
+		.tooltip-content {
+			width: 260px;
+			padding: 1rem;
+			font-size: 0.75rem;
+		}
+
+		.tooltip-content::after {
+			border-width: 6px;
 		}
 	}
 </style>
